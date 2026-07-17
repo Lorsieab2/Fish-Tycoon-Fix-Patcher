@@ -1,0 +1,11 @@
+/build/
+/outputs/*
+!/outputs/.gitkeep
+/reference/private/
+/.fish_tycoon_patch_backups/
+__pycache__/
+*.pyc
+*.zip
+patcher_local_settings.json
+Fish Tycoon.exe
+*.exe

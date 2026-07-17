@@ -1,0 +1,51 @@
+Fish Tycoon Bug Fix Patcher - Transparency Log
+===============================================
+
+Release: v1.0.0
+Date: 2026-07-17
+
+Purpose
+-------
+Repair the classic Windows Fish Tycoon Crimson Comet curing branch with the
+20% behavior supplied as the cross-version target: one 0..99 roll and success
+on 0..19, followed by the game's existing disease/status clear.
+
+Observed original behavior
+--------------------------
+The supported PC executable checks the current fish's nonzero disease/status
+field and calls selector 2, whose hard-coded target pair is body 11 and fin 11.
+It then calls sub_403240 with zero. That helper consumes one CRT rand() result
+but can return only zero for this argument. The next zero test skips the clear
+block. A live audit recorded 84 CHECK successes, 84 selector-2 successes, 84
+zero RNG results, and zero CLEAR entries.
+
+Implemented change
+------------------
+The patch redirects only the broken call to a 14-byte wrapper in verified INT3
+alignment padding between two functions. The existing PE checksum is recomputed
+for Windows loader validation; section layout is unchanged. The wrapper calls
+the original helper once with 100 and compares
+the returned 0..99 value with 20, and returns one for 0..19 or zero for 20..99.
+The game's original test/jump, disease clear, and cure counter increment remain
+unchanged.
+
+File identities
+---------------
+Original SHA-256:
+9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD
+
+Patched SHA-256:
+33C8C9469E8E9F7DD460C4A9B9A3A897D2A9505C1E2627988046D8CED097AD9B
+
+Distribution
+------------
+This repository and its releases contain the patcher, transparent manifest,
+documentation, and tests. They do not contain Fish Tycoon.exe or original game
+assets. The patcher requires the user to provide the exact supported executable
+and creates a separate output folder by default.
+
+Interpretation boundary
+-----------------------
+The byte-level behavior and live observations are documented exactly. The
+classification of the original behavior as a developer bug is the player's
+interpretation.
