@@ -40,6 +40,12 @@ def verify(exe: Path, manifest_path: Path, enabled: set[str] | None = None) -> d
     checks: dict[str, bool] = {
         "file_size_unchanged": len(data) == 385024,
     }
+    resource = manifest.get("target", {}).get("resource_section", {})
+    resource_offset = patcher.parse_int(resource.get("offset"), "target.resource_section.offset")
+    resource_size = patcher.parse_int(resource.get("size"), "target.resource_section.size")
+    checks["base_game_resource_section_preserved"] = patcher.sha256_bytes(
+        data[resource_offset:resource_offset + resource_size]
+    ) == str(resource.get("sha256", "")).upper()
     for record in records:
         offset = patcher.parse_int(record["offset"], "offset")
         replacement = patcher.parse_hex(record["replacement"], "replacement")
@@ -51,6 +57,13 @@ def verify(exe: Path, manifest_path: Path, enabled: set[str] | None = None) -> d
         "sha256": actual_hash,
         "enabled_settings": sorted(selected),
         "checks": checks,
+        "base_game_resources": {
+            "section": resource.get("name"),
+            "offset": f"0x{resource_offset:X}",
+            "size": resource_size,
+            "sha256": resource.get("sha256"),
+            "icon_policy": "original executable resource section preserved byte-for-byte",
+        },
     }
 
     if "crimson_comet_20_percent_cure" in selected:
@@ -97,6 +110,7 @@ def verify(exe: Path, manifest_path: Path, enabled: set[str] | None = None) -> d
         checks.update({
             "text_virtual_size_extended": data[0x1F8:0x1FC] == bytes.fromhex("00 F0 03 00"),
             "universal_payload_exact": data[slots.CAVE_FILE_OFFSET:slots.CAVE_FILE_OFFSET + len(payload)] == payload,
+            "normal_purchase_confirmation_present": bytes.fromhex("6A 01 68 EC 00 00 00") in payload[:labels["purchase_confirmed"]],
             "purchase_hook_target": rel32_target(0x00428133, data[0x28133:0x28138], 0xE9) == slots.CAVE_VA,
             "use_hook_target": rel32_target(0x00420B70, data[0x20B70:0x20B75], 0xE9) == slots.CAVE_VA + labels["use"],
             "common_egg_stack_hook": rel32_target(0x004213A7, data[0x213A7:0x213AC], 0xE9) == egg_target,
@@ -111,6 +125,7 @@ def verify(exe: Path, manifest_path: Path, enabled: set[str] | None = None) -> d
             "supported_item_indices": list(range(8)),
             "supported_items": ["Ick Medicine", "Fungus Medicine", "Fish Vitamins", "Growth Hormone", "Unknown Chemical", "Common Eggs", "Unusual Eggs", "Rare Eggs"],
             "placement_order": "matching stack; first empty slot 2, 3, 4; replacement prompts 2, 3, 4",
+            "purchase_confirmation": "original localized store prompt ID 0xEC appears before slot placement",
             "uses_added_per_purchase": {"Ick Medicine": 3, "Fungus Medicine": 3, "Fish Vitamins": 3, "Growth Hormone": 3, "Unknown Chemical": unknown_doses, "Common Eggs": 1, "Unusual Eggs": 1, "Rare Eggs": 1},
         })
 

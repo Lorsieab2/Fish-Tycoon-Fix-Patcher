@@ -59,6 +59,21 @@ def pe_checksum(data: bytes, checksum_offset: int = 0x150) -> int:
     return (total + len(work)) & 0xFFFFFFFF
 
 
+def resource_section(data: bytes) -> dict[str, object]:
+    pe_offset = struct.unpack_from("<I", data, 0x3C)[0]
+    section_count = struct.unpack_from("<H", data, pe_offset + 6)[0]
+    optional_size = struct.unpack_from("<H", data, pe_offset + 20)[0]
+    table = pe_offset + 24 + optional_size
+    for index in range(section_count):
+        header = struct.unpack_from("<8sIIIIIIHHI", data, table + index * 40)
+        name = header[0].split(b"\0", 1)[0].decode("ascii")
+        if name == ".rsrc":
+            raw_size, raw_offset = header[3], header[4]
+            raw = data[raw_offset:raw_offset + raw_size]
+            return {"name": name, "offset": f"0x{raw_offset:X}", "size": raw_size, "sha256": patcher.sha256_bytes(raw)}
+    raise ValueError("Original executable has no .rsrc section")
+
+
 def active(records: list[dict[str, object]], enabled: set[str]) -> list[dict[str, object]]:
     return [r for r in records
             if all(x in enabled for x in r.get("requires", []))
@@ -69,7 +84,7 @@ def main() -> int:
     original = ORIGINAL.read_bytes()
     payload1, labels1 = slots.build_payload(1)
     payload3, labels3 = slots.build_payload(3)
-    assert len(payload1) == len(payload3) == 881
+    assert len(payload1) == len(payload3)
     assert labels1 == labels3
     assert original[slots.CAVE_FILE_OFFSET:slots.CAVE_FILE_OFFSET + len(payload1)] == bytes(len(payload1))
 
@@ -91,7 +106,7 @@ def main() -> int:
         record("extend_text_virtual_size_for_slots_payload", 0x1F8, bytes.fromhex("9F E2 03 00"), bytes.fromhex("00 F0 03 00"), [UNIVERSAL], "Maps the existing zero-filled end of .text that contains the slot payload."),
         record("install_universal_slots_payload_unknown_one", slots.CAVE_FILE_OFFSET, bytes(len(payload1)), payload1, [UNIVERSAL], "Installs exact-item stacking and use routing; Unknown Chemical purchases add one use.", [CHEMICAL]),
         record("install_universal_slots_payload_unknown_three", slots.CAVE_FILE_OFFSET, bytes(len(payload3)), payload3, [UNIVERSAL, CHEMICAL], "Installs exact-item stacking and use routing; Unknown Chemical purchases add three uses."),
-        record("redirect_store_purchase_for_universal_slots", 0x28133, bytes.fromhex("83 FF 19 0F 87 9A 00 00 00"), slots.rel32_patch(0x00428133, slots.CAVE_VA, 9), [UNIVERSAL], "Routes the exact eight supported store items through matching-stack, empty-slot, and replacement selection logic."),
+        record("redirect_store_purchase_for_universal_slots", 0x28133, bytes.fromhex("83 FF 19 0F 87 9A 00 00 00"), slots.rel32_patch(0x00428133, slots.CAVE_VA, 9), [UNIVERSAL], "Preserves the original Buy confirmation, then routes the exact eight supported items through matching-stack, empty-slot, and replacement logic."),
         record("redirect_item_use_for_universal_slots", 0x20B70, bytes.fromhex("83 EC 20 53 8B 5C 24 2C"), slots.rel32_patch(0x00420B70, slots.CAVE_VA + labels1["use"], 8), [UNIVERSAL], "Routes supported items through their original handler regardless of physical slot."),
     ]
     for name, offset, va in (("common", 0x213A7, 0x004213A7), ("unusual", 0x21476, 0x00421476), ("rare", 0x21549, 0x00421549)):
@@ -111,17 +126,17 @@ def main() -> int:
     settings = [
         {"id": CURE, "name": "Crimson Comet 20% curing fix", "description": "Rolls 0..99 once for each eligible diseased fish; 0..19 enters the original cure and counter block.", "category": "main", "default": True},
         {"id": CHEMICAL, "name": "Unknown Chemical: 3 uses", "description": "Each purchase adds three uses instead of one and the English store description says 'Contains 3 doses.'.", "category": "main", "default": True},
-        {"id": UNIVERSAL, "name": "Universal supply slots 2-4", "description": "Lets the eight supported medicines, chemicals, and egg types stack in any supply slot. Matching stack first, then empty slot 2-4, then replacement prompts.", "category": "main", "default": True},
+        {"id": UNIVERSAL, "name": "Universal supply slots 2-4", "description": "Keeps the normal Buy confirmation, then lets the eight supported medicines, chemicals, and egg types stack in any supply slot. Matching stack first, then empty slot 2-4, then replacement prompts.", "category": "main", "default": True},
     ]
     manifest: dict[str, object] = {
         "manifest_version": 3,
-        "id": "fish-tycoon-pc-fixes-v3",
+        "id": "fish-tycoon-pc-fixes-v4",
         "name": "Fish Tycoon Fix Patcher",
-        "version": "v1.2.0",
+        "version": "v1.2.1",
         "description": "Repairs Crimson Comet curing, fixes Unknown Chemical uses, and lets the exact supported supplies stack in slots 2-4.",
         "patched_sha256": "",
         "patched_sha256_by_settings": {},
-        "target": {"exe_name": "Fish Tycoon.exe", "size": len(original), "sha256": patcher.sha256_bytes(original), "pe_timestamp": "0x536BDE35", "machine": "0x014C", "optional_magic": "0x010B", "image_base": "0x00400000"},
+        "target": {"exe_name": "Fish Tycoon.exe", "size": len(original), "sha256": patcher.sha256_bytes(original), "pe_timestamp": "0x536BDE35", "machine": "0x014C", "optional_magic": "0x010B", "image_base": "0x00400000", "resource_section": resource_section(original)},
         "output": {"default_folder_name": "Fish Tycoon - Fixed", "exe_name": "Fish Tycoon.exe"},
         "settings": settings,
         "patches": records,

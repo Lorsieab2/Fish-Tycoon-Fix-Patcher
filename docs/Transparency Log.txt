@@ -1,7 +1,7 @@
 Fish Tycoon Fix Patcher - Transparency Log
 ==========================================
 
-Release: v1.2.0
+Release: v1.2.1
 Date: 2026-07-21
 
 This release provides three independently selectable changes for one exact
@@ -14,15 +14,18 @@ classic Windows Fish Tycoon executable.
    description says "Contains 3 doses."
 3. Slots 2-4 accept and stack exactly Ick Medicine, Fungus Medicine, Fish
    Vitamins, Growth Hormone, Unknown Chemical, Common Eggs, Unusual Eggs, and
-   Rare Eggs. Matching stacks take priority, then empty slots 2-4, then explicit
-   replacement prompts. Eggs consume one stacked use at a time.
+   Rare Eggs. The original localized "Buy this ...?" confirmation appears
+   first. After Yes, matching stacks take priority, then empty slots 2-4, then
+   explicit replacement prompts. Eggs consume one stacked use at a time.
 
 Original SHA-256:
 9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD
 
 Default all-fixes SHA-256:
-C8B8C834CBDE2C362584B9F33381F8FA43DF7AF41A42FB73EDDD6C9F4B79FFB2
+CC498FE29D84F6486AB69CE8C02ADE67096BDE60670AAF740B9CC580C4B68C58
 
 The repository and release contain source, manifest, documentation, and tests.
 They contain no game executable or original assets. Static and stopped-loader
-validation do not replace the player's final in-game interpretation.
+validation do not replace the player's final in-game interpretation. Every
+patched output preserves the original `.rsrc` section and base game icon
+byte-for-byte.

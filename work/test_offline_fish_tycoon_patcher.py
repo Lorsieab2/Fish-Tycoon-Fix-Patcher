@@ -26,7 +26,7 @@ class FishTycoonPatcherTests(unittest.TestCase):
         self.assertEqual(list(settings), [CURE, CHEMICAL, UNIVERSAL])
         self.assertTrue(all(settings[key]["default"] for key in settings))
         self.assertEqual(self.manifest["name"], "Fish Tycoon Fix Patcher")
-        self.assertEqual(self.manifest["version"], "v1.2.0")
+        self.assertEqual(self.manifest["version"], "v1.2.1")
 
     def test_all_seven_setting_combinations_have_one_checksum_and_hash(self) -> None:
         ids = [CURE, CHEMICAL, UNIVERSAL]
@@ -52,6 +52,7 @@ class FishTycoonPatcherTests(unittest.TestCase):
         differences = [i for i, pair in enumerate(zip(payload1, payload3)) if pair[0] != pair[1]]
         self.assertEqual(len(differences), 1)
         self.assertEqual((payload1[differences[0]], payload3[differences[0]]), (1, 3))
+        self.assertIn(bytes.fromhex("6A 01 68 EC 00 00 00"), payload1[:labels1["purchase_confirmed"]])
         self.assertIn(bytes.fromhex("89 5E 1C"), payload1)  # selected physical slot is restored
 
     def test_unknown_chemical_runtime_reset_is_removed(self) -> None:
@@ -71,6 +72,12 @@ class FishTycoonPatcherTests(unittest.TestCase):
             self.assertIn(f"stack_{egg}_egg_uses", ids)
         self.assertIn("install_universal_slots_payload_unknown_one", ids)
         self.assertNotIn("install_universal_slots_payload_unknown_three", ids)
+
+    def test_manifest_pins_original_resource_section_for_icon_preservation(self) -> None:
+        resource = self.manifest["target"]["resource_section"]
+        self.assertEqual(resource["name"], ".rsrc")
+        self.assertGreater(resource["size"], 0)
+        self.assertEqual(len(resource["sha256"]), 64)
 
     def test_default_contract_applies_nonoverlapping_ranges(self) -> None:
         records = patcher.active_patch_records(self.manifest, {CURE, CHEMICAL, UNIVERSAL})

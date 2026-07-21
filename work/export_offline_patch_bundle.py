@@ -69,7 +69,7 @@ The patcher accepts only this exact original executable:
 SHA-256: 9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD
 
 The fixed executable with all three fixes has this exact SHA-256:
-C8B8C834CBDE2C362584B9F33381F8FA43DF7AF41A42FB73EDDD6C9F4B79FFB2
+CC498FE29D84F6486AB69CE8C02ADE67096BDE60670AAF740B9CC580C4B68C58
 
 The fix performs one random roll from 0 through 99 for every eligible diseased
 fish when a real body/fin (11,11) Crimson Comet is present. Results 0 through 19
@@ -82,7 +82,8 @@ empty-at-zero behavior. Its English description ends with: Contains 3 doses.
 
 The universal-slot fix supports exactly: Ick Medicine, Fungus Medicine, Fish
 Vitamins, Growth Hormone, Unknown Chemical, Common Eggs, Unusual Eggs, and Rare
-Eggs. A purchase adds to a matching stack first. Otherwise it uses the first
+Eggs. The game's normal "Buy this ...?" prompt appears first. After Yes, a
+purchase adds to a matching stack first. Otherwise it uses the first
 empty slot in order 2, 3, 4. If all three are occupied, it asks which slot to
 replace. Medicines, vitamins, and Growth Hormone add 3 uses; eggs add 1;
 Unknown Chemical adds 1 or 3 according to its separate checkbox.
@@ -90,7 +91,7 @@ Unknown Chemical adds 1 or 3 according to its separate checkbox.
 The release does not contain Fish Tycoon.exe or any original game assets.
 
 Trainer compatibility:
-Fish Tycoon 1 Crimson Comet Test Trainer v1.5.0 and later accepts the exact
+Fish Tycoon 1 Crimson Comet Test Trainer v1.5.1 and later accepts the exact
 fixed executable hash shown above.
 
 Have fun! -Lorsieab2 :)

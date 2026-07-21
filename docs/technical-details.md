@@ -1,4 +1,4 @@
-# Fish Tycoon Fix Patcher v1.2.0: technical details
+# Fish Tycoon Fix Patcher v1.2.1: technical details
 
 ## Crimson Comet curing
 
@@ -19,7 +19,9 @@ three when it is on. The original decrement at `0x00421305` remains unchanged.
 
 ## Universal slots and stacking
 
-The purchase hook at `0x00428133` accepts only store indices `0..7`. It searches
+The purchase hook at `0x00428133` accepts only store indices `0..7`. It first
+constructs the original localized store confirmation with string ID `0xEC` and
+cancels without changes unless the player selects Yes. It then searches
 occupied slot records 2, 3, 4 for the same item index, then searches for an
 empty icon field in slot order, then presents generic replacement prompts.
 The purchase writer remains `0x00427540`; the wrapper replaces its default count
@@ -41,4 +43,9 @@ English and German slot prompts are changed to generic item-replacement text.
 
 The manifest stores exact expected/replacement bytes, all seven nonempty
 setting hashes, and mutually exclusive PE checksum records. The patcher rejects
-any executable identity or byte sequence that does not match.
+any executable identity or byte sequence that does not match. It also pins the
+original `.rsrc` section's size and SHA-256; the independent verifier requires
+that section—including the base game application icon—to remain byte-identical.
+After the fixed folder is installed, the patcher sends Windows
+`SHCNE_UPDATEITEM` for the output EXE so Explorer refreshes any stale generic
+white icon cached for that path.

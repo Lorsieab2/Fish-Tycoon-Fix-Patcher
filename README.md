@@ -34,7 +34,8 @@ Slots 2, 3, and 4 accept exactly these store supplies:
 - Unusual Eggs
 - Rare Eggs
 
-A purchase adds to a matching item stack first. If none exists, it uses the
+The game's normal localized `Buy this ...?` confirmation appears first. After
+the player accepts, a purchase adds to a matching item stack. If none exists, it uses the
 first empty slot in order 2, 3, 4. If all three are occupied, the player is
 asked about replacing slot 2, then 3, then 4; declining all three cancels the
 purchase. Medicines, vitamins, and Growth Hormone add 3 uses per purchase;
@@ -50,7 +51,10 @@ extract it, close Fish Tycoon and the trainer, and run `Launch_GUI.bat`.
 The patcher validates the exact original executable and every expected byte,
 supports a no-write dry run, copies the complete game folder to a separate
 `Fish Tycoon - Fixed` folder, creates a verified backup, writes apply/restore
-logs, and computes the correct PE checksum for every setting combination.
+logs, and computes the correct PE checksum for every setting combination. The
+modded EXE retains the base game's embedded resource section and application
+icon byte-for-byte. After installing the output, the patcher asks Windows
+Explorer to refresh that EXE's cached icon.
 
 ## Supported executable
 
@@ -64,12 +68,12 @@ PE:       x86 / PE32, timestamp 0x536BDE35, image base 0x00400000
 The default all-fixes output is:
 
 ```text
-SHA-256: C8B8C834CBDE2C362584B9F33381F8FA43DF7AF41A42FB73EDDD6C9F4B79FFB2
+SHA-256: CC498FE29D84F6486AB69CE8C02ADE67096BDE60670AAF740B9CC580C4B68C58
 ```
 
 All seven nonempty setting-combination hashes are recorded in
 `patches/fish-tycoon-fixes/manifest.json`. Fish Tycoon 1 Crimson Comet Test
-Trainer v1.5.0 and later recognizes the v1.2 outputs.
+Trainer v1.5.1 and later recognizes the v1.2.1 outputs.
 
 ## Development
 

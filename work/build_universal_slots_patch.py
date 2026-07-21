@@ -86,6 +86,11 @@ def build_payload(unknown_doses: int) -> tuple[bytes, dict[str, int]]:
     code.label("purchase")
     code.emit([0x83, 0xFF, 0x07])                 # cmp edi,7
     code.rel32(b"\x0F\x87", "purchase_original")
+    # Preserve the store's normal localized "Buy this ...?" confirmation for
+    # every supported item before selecting, stacking, or replacing a slot.
+    emit_prompt(code, 0xEC, "purchase_confirmed")
+    code.rel32(b"\xE9", 0x00428225)              # player declined the purchase
+    code.label("purchase_confirmed")
     code.emit([0x83,0xB9,0xE0,0x02,0,0,0])       # occupied slot 2?
     code.rel32(b"\x0F\x84", "match_3")
     code.emit([0x39,0xB9,0xD4,0x02,0,0])         # same item in slot 2?

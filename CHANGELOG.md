@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.1 - 2026-07-21
+
+- Restored the original localized `Buy this ...?` confirmation before every
+  supported medicine, chemical, or egg purchase.
+- Kept stacking, empty-slot selection, and replacement prompts after Yes.
+
 ## v1.2.0 - 2026-07-21
 
 - Added exact eight-item support for supply slots 2-4.

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
 import hashlib
 import json
 import os
@@ -262,6 +263,19 @@ def recognized_output(path: Path, manifest: dict[str, Any]) -> bool:
     return value.get("manifest_id") == manifest.get("id")
 
 
+def notify_windows_shell_file_changed(path: Path) -> bool:
+    """Ask Explorer to discard a stale cached icon for the replaced EXE path."""
+    if os.name != "nt":
+        return False
+    try:
+        shell32 = ctypes.windll.shell32
+        # SHCNE_UPDATEITEM, SHCNF_PATHW | SHCNF_FLUSH
+        shell32.SHChangeNotify(0x00002000, 0x00001005, str(path), None)
+        return True
+    except Exception:
+        return False
+
+
 def apply_manifest(args: argparse.Namespace) -> int:
     manifest_path = Path(args.manifest).expanduser().resolve()
     manifest = read_json(manifest_path)
@@ -348,6 +362,11 @@ def apply_manifest(args: argparse.Namespace) -> int:
             previous = backup_dir / "previous_output"
             shutil.move(str(output_dir), str(previous))
         os.replace(staging, output_dir)
+        report["base_game_icon_resources_preserved"] = True
+        report["windows_shell_icon_refresh_requested"] = notify_windows_shell_file_changed(
+            output_dir / vanilla_exe.name
+        )
+        write_json(output_dir / "FishTycoonBugFixPatchLog.json", report)
     except Exception:
         if staging.exists():
             shutil.rmtree(staging, ignore_errors=True)
