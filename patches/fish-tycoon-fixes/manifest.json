@@ -1,0 +1,109 @@
+{
+  "manifest_version": 2,
+  "id": "fish-tycoon-pc-fixes-v2",
+  "name": "Fish Tycoon Fix Patcher",
+  "version": "v1.1.0",
+  "description": "Repairs the Crimson Comet cure and optionally gives the Unknown Chemical three uses with a matching English store description.",
+  "patched_sha256": "44CCC2EAA5633A88CDE03115C650F793E50391D48FFA707ADE44F284C808C49F",
+  "patched_sha256_by_settings": {
+    "crimson_comet_20_percent_cure": "33C8C9469E8E9F7DD460C4A9B9A3A897D2A9505C1E2627988046D8CED097AD9B",
+    "unknown_chemical_three_uses": "7A78B09F0509BDFFC191FFB9637FA41F8E8FEC73A10A524A6B017F3E42E88983",
+    "crimson_comet_20_percent_cure,unknown_chemical_three_uses": "44CCC2EAA5633A88CDE03115C650F793E50391D48FFA707ADE44F284C808C49F"
+  },
+  "target": {
+    "exe_name": "Fish Tycoon.exe",
+    "size": 385024,
+    "sha256": "9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD",
+    "pe_timestamp": "0x536BDE35",
+    "machine": "0x014C",
+    "optional_magic": "0x010B",
+    "image_base": "0x00400000"
+  },
+  "output": {
+    "default_folder_name": "Fish Tycoon - Fixed",
+    "exe_name": "Fish Tycoon.exe"
+  },
+  "settings": [
+    {
+      "id": "crimson_comet_20_percent_cure",
+      "name": "Crimson Comet 20% curing fix",
+      "description": "For each eligible diseased fish, roll 0..99 once; values 0..19 enter the original disease-clear and cure-counter block.",
+      "category": "main",
+      "default": true
+    },
+    {
+      "id": "unknown_chemical_three_uses",
+      "name": "Unknown Chemical: 3 uses",
+      "description": "Initializes the Unknown Chemical with three uses instead of one and changes its English store description to 'Contains 3 doses.'",
+      "category": "main",
+      "default": true
+    }
+  ],
+  "patches": [
+    {
+      "id": "redirect_crimson_comet_random_call",
+      "file_path": "Fish Tycoon.exe",
+      "offset": "0x204CE",
+      "expected": "E8 6D 2D FE FF",
+      "replacement": "E8 3E 19 FE FF",
+      "requires": ["crimson_comet_20_percent_cure"],
+      "note": "Redirects only the broken sub_403240(0) call at VA 0x004204CE to the wrapper at VA 0x00401E11."
+    },
+    {
+      "id": "install_crimson_comet_20_percent_wrapper",
+      "file_path": "Fish Tycoon.exe",
+      "offset": "0x1E11",
+      "expected": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC",
+      "replacement": "6A 64 E8 28 14 00 00 59 3C 14 0F 92 C0 C3",
+      "requires": ["crimson_comet_20_percent_cure"],
+      "note": "Uses verified INT3 alignment padding. Calls the original exclusive-upper-bound RNG helper once with 100 and returns 1 only for 0..19."
+    },
+    {
+      "id": "unknown_chemical_initialize_three_uses",
+      "file_path": "Fish Tycoon.exe",
+      "offset": "0x210B7",
+      "expected": "C7 80 F8 02 00 00 01 00 00 00",
+      "replacement": "C7 80 F8 02 00 00 03 00 00 00",
+      "requires": ["unknown_chemical_three_uses"],
+      "note": "Changes the Unknown Chemical branch at VA 0x004210B7 from mov dword ptr [eax+0x2F8],1 to mov dword ptr [eax+0x2F8],3. The original post-use decrement and empty-at-zero logic remain unchanged."
+    },
+    {
+      "id": "unknown_chemical_store_description_three_doses",
+      "file_path": "Fish Tycoon.exe",
+      "offset": "0x458C9",
+      "expected": "43 6F 6E 74 61 69 6E 73 20 6F 6E 65 20 64 6F 73 65 2E",
+      "replacement": "43 6F 6E 74 61 69 6E 73 20 33 20 64 6F 73 65 73 2E 00",
+      "requires": ["unknown_chemical_three_uses"],
+      "note": "Changes the unique English text 'Contains one dose.' to the equal-length null-terminated text 'Contains 3 doses.' The rest of the store description is unchanged."
+    },
+    {
+      "id": "update_pe_checksum_crimson_only",
+      "file_path": "Fish Tycoon.exe",
+      "offset": "0x150",
+      "expected": "B0 09 06 00",
+      "replacement": "52 B4 06 00",
+      "requires": ["crimson_comet_20_percent_cure"],
+      "excludes": ["unknown_chemical_three_uses"],
+      "note": "Sets the correct PE checksum 0x0006B452 for the Crimson-only output."
+    },
+    {
+      "id": "update_pe_checksum_unknown_chemical_only",
+      "file_path": "Fish Tycoon.exe",
+      "offset": "0x150",
+      "expected": "B0 09 06 00",
+      "replacement": "53 CB 06 00",
+      "requires": ["unknown_chemical_three_uses"],
+      "excludes": ["crimson_comet_20_percent_cure"],
+      "note": "Sets the correct PE checksum 0x0006CB53 for the Unknown-Chemical-only output."
+    },
+    {
+      "id": "update_pe_checksum_all_fixes",
+      "file_path": "Fish Tycoon.exe",
+      "offset": "0x150",
+      "expected": "B0 09 06 00",
+      "replacement": "F6 75 06 00",
+      "requires": ["crimson_comet_20_percent_cure", "unknown_chemical_three_uses"],
+      "note": "Sets the correct PE checksum 0x000675F6 for the default output containing both fixes."
+    }
+  ]
+}

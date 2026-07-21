@@ -32,16 +32,16 @@ if %ERRORLEVEL%==0 (
 pause
 '''
 
-HOW_TO_USE = r'''Fish Tycoon Bug Fix Patcher - How to Use
-================================================
+HOW_TO_USE = r'''Fish Tycoon Fix Patcher - How to Use
+========================================
 
 ELI5 version:
 This patcher checks your official classic Windows Fish Tycoon.exe and makes a
-separate bug-fixed copy of the complete game folder. It does not overwrite the
+separate fixed copy of the complete game folder. It does not overwrite the
 vanilla folder you select.
 
 Check for updates:
-https://github.com/Lorsieab2/Fish-Tycoon-Bug-Fix-Patcher/releases
+https://github.com/Lorsieab2/Fish-Tycoon-Fix-Patcher/releases
 
 1. Close Fish Tycoon and the trainer before patching.
 
@@ -52,31 +52,37 @@ https://github.com/Lorsieab2/Fish-Tycoon-Bug-Fix-Patcher/releases
 
 4. Select the vanilla game folder containing Fish Tycoon.exe.
 
-5. Keep "Crimson Comet 20% curing fix" checked.
+5. Keep both fixes checked:
+   - Crimson Comet 20% curing fix
+   - Unknown Chemical: 3 uses
 
 6. Optional but recommended: click Dry Run (Validate Only).
    This verifies the exact supported EXE and patch bytes without writing files.
 
-7. Click Create Bug-Fixed Copy.
+7. Click Create Fixed Copy.
 
 8. Run Fish Tycoon.exe from the new folder named:
-   Fish Tycoon - Crimson Comet Bug Fix
+   Fish Tycoon - Fixed
 
 The patcher accepts only this exact original executable:
 SHA-256: 9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD
 
 The fixed executable has this exact SHA-256:
-33C8C9469E8E9F7DD460C4A9B9A3A897D2A9505C1E2627988046D8CED097AD9B
+44CCC2EAA5633A88CDE03115C650F793E50391D48FFA707ADE44F284C808C49F
 
 The fix performs one random roll from 0 through 99 for every eligible diseased
 fish when a real body/fin (11,11) Crimson Comet is present. Results 0 through 19
 enter the game's original disease-clear and cure-counter instructions: exactly
 20 successful values out of 100.
 
+The Unknown Chemical fix initializes its verified use counter to 3 instead of
+1. The original after-use decrement and empty-at-zero behavior are unchanged.
+Its English store description now ends with: Contains 3 doses.
+
 The release does not contain Fish Tycoon.exe or any original game assets.
 
 Trainer compatibility:
-Fish Tycoon 1 Crimson Comet Test Trainer v1.3.0 and later accepts the exact
+Fish Tycoon 1 Crimson Comet Test Trainer v1.4.0 and later accepts the exact
 fixed executable hash shown above.
 
 Have fun! -Lorsieab2 :)
@@ -93,7 +99,7 @@ def export_bundle(repo: Path, output: Path) -> list[Path]:
         repo / "work" / "offline_fish_tycoon_patcher.py": output / "offline_fish_tycoon_patcher.py",
         repo / "work" / "offline_fish_tycoon_patcher_gui.py": output / "offline_fish_tycoon_patcher_gui.py",
         repo / "work" / "verify_patched_exe.py": output / "verify_patched_exe.py",
-        repo / "patches" / "crimson-comet-20-percent" / "manifest.json": output / "manifest.json",
+        repo / "patches" / "fish-tycoon-fixes" / "manifest.json": output / "manifest.json",
         repo / "docs" / "Transparency Log.txt": output / "Transparency Log.txt",
         repo / "README.md": output / "README.txt",
         repo / "LICENSE": output / "LICENSE.txt",

@@ -13,11 +13,11 @@ class FishTycoonPatcherGuiTests(unittest.TestCase):
     def test_release_url_is_public_repository(self) -> None:
         self.assertEqual(
             gui.RELEASES_URL,
-            "https://github.com/Lorsieab2/Fish-Tycoon-Bug-Fix-Patcher/releases",
+            "https://github.com/Lorsieab2/Fish-Tycoon-Fix-Patcher/releases",
         )
 
     def test_app_name_is_specific(self) -> None:
-        self.assertEqual(gui.APP_NAME, "Fish Tycoon Bug Fix Patcher")
+        self.assertEqual(gui.APP_NAME, "Fish Tycoon Fix Patcher")
 
 
 if __name__ == "__main__":

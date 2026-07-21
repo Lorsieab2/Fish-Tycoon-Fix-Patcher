@@ -16,8 +16,8 @@ import webbrowser
 import offline_fish_tycoon_patcher as patcher
 
 
-APP_NAME = "Fish Tycoon Bug Fix Patcher"
-RELEASES_URL = "https://github.com/Lorsieab2/Fish-Tycoon-Bug-Fix-Patcher/releases"
+APP_NAME = "Fish Tycoon Fix Patcher"
+RELEASES_URL = "https://github.com/Lorsieab2/Fish-Tycoon-Fix-Patcher/releases"
 SETTINGS_FILE = "patcher_local_settings.json"
 CREATOR_MESSAGE = (
     "Created with Codex AI in collaboration with Lorsieab2. This passion project "
@@ -34,7 +34,7 @@ def default_manifest() -> Path:
     adjacent = base_dir() / "manifest.json"
     if adjacent.is_file():
         return adjacent
-    return base_dir().parent / "patches" / "crimson-comet-20-percent" / "manifest.json"
+    return base_dir().parent / "patches" / "fish-tycoon-fixes" / "manifest.json"
 
 
 def settings_path() -> Path:
@@ -104,7 +104,7 @@ class FishTycoonPatcherGUI:
         self.dry_button.pack(side="left")
         self.apply_button = tk.Button(
             actions,
-            text="Create Bug-Fixed Copy",
+            text="Create Fixed Copy",
             command=lambda: self.start_apply(False),
             bg="#07852f",
             fg="white",
@@ -141,7 +141,7 @@ class FishTycoonPatcherGUI:
             self.game_dir.set(selected)
             if not self.output_dir.get().strip():
                 game = Path(selected)
-                self.output_dir.set(str(game.parent / "Fish Tycoon - Crimson Comet Bug Fix"))
+                self.output_dir.set(str(game.parent / "Fish Tycoon - Fixed"))
 
     def browse_manifest(self) -> None:
         selected = filedialog.askopenfilename(title="Select manifest.json", filetypes=[("JSON", "*.json")])
@@ -150,11 +150,11 @@ class FishTycoonPatcherGUI:
             self.load_manifest()
 
     def browse_output(self) -> None:
-        selected = filedialog.askdirectory(title="Select or create the parent location for the bug-fixed folder")
+        selected = filedialog.askdirectory(title="Select or create the parent location for the fixed folder")
         if selected:
             candidate = Path(selected)
-            if candidate.name != "Fish Tycoon - Crimson Comet Bug Fix":
-                candidate /= "Fish Tycoon - Crimson Comet Bug Fix"
+            if candidate.name != "Fish Tycoon - Fixed":
+                candidate /= "Fish Tycoon - Fixed"
             self.output_dir.set(str(candidate))
 
     def browse_backup(self) -> None:

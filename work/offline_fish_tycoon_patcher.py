@@ -174,9 +174,25 @@ def active_patch_records(manifest: dict[str, Any], enabled: set[str]) -> list[di
         requires = patch.get("requires", [])
         if not isinstance(requires, list) or not all(isinstance(item, str) for item in requires):
             raise PatchError(f"patches[{index}].requires must be a string list.")
-        if all(item in enabled for item in requires):
+        excludes = patch.get("excludes", [])
+        if not isinstance(excludes, list) or not all(isinstance(item, str) for item in excludes):
+            raise PatchError(f"patches[{index}].excludes must be a string list.")
+        if all(item in enabled for item in requires) and not any(item in enabled for item in excludes):
             result.append(patch)
     return result
+
+
+def settings_key(enabled: set[str]) -> str:
+    return ",".join(sorted(enabled))
+
+
+def expected_patched_hash(manifest: dict[str, Any], enabled: set[str]) -> str:
+    variants = manifest.get("patched_sha256_by_settings")
+    if variants is not None:
+        if not isinstance(variants, dict) or not all(isinstance(key, str) and isinstance(value, str) for key, value in variants.items()):
+            raise PatchError("patched_sha256_by_settings must be a string-to-string object.")
+        return str(variants.get(settings_key(enabled), "")).upper()
+    return str(manifest.get("patched_sha256", "")).upper()
 
 
 def apply_patch_bytes(data: bytes, patches: list[dict[str, Any]]) -> tuple[bytes, list[dict[str, Any]]]:
@@ -222,7 +238,7 @@ def resolve_paths(args: argparse.Namespace, manifest: dict[str, Any]) -> tuple[P
     exe_name = str(target.get("exe_name", "Fish Tycoon.exe"))
     exe = game_dir / exe_name
     output_cfg = manifest.get("output", {})
-    default_folder = str(output_cfg.get("default_folder_name", "Fish Tycoon - Bug Fixed"))
+    default_folder = str(output_cfg.get("default_folder_name", "Fish Tycoon - Fixed"))
     output_dir = (
         Path(args.output_dir).expanduser().resolve()
         if getattr(args, "output_dir", None)
@@ -255,11 +271,13 @@ def apply_manifest(args: argparse.Namespace) -> int:
     patches = active_patch_records(manifest, enabled)
     original = vanilla_exe.read_bytes()
     patched, patch_summary = apply_patch_bytes(original, patches)
-    expected_patched_hash = str(manifest.get("patched_sha256", "")).upper()
+    expected_hash = expected_patched_hash(manifest, enabled)
     patched_hash = sha256_bytes(patched)
-    if patches and expected_patched_hash and patched_hash != expected_patched_hash:
+    if patches and not expected_hash:
+        raise PatchError(f"Manifest has no expected output hash for enabled settings: {settings_key(enabled)}")
+    if patches and patched_hash != expected_hash:
         raise PatchError(
-            f"Patched output hash mismatch: {patched_hash}; expected {expected_patched_hash}."
+            f"Patched output hash mismatch: {patched_hash}; expected {expected_hash}."
         )
 
     report = {
@@ -336,7 +354,7 @@ def apply_manifest(args: argparse.Namespace) -> int:
         raise
 
     print(json.dumps(report, indent=2))
-    print(f"PATCH PASS: created separate bug-fixed game folder: {output_dir}")
+    print(f"PATCH PASS: created separate fixed game folder: {output_dir}")
     return 0
 
 
