@@ -52,9 +52,10 @@ https://github.com/Lorsieab2/Fish-Tycoon-Fix-Patcher/releases
 
 4. Select the vanilla game folder containing Fish Tycoon.exe.
 
-5. Keep both fixes checked:
+5. Keep all three fixes checked:
    - Crimson Comet 20% curing fix
    - Unknown Chemical: 3 uses
+   - Universal supply slots 2-4
 
 6. Optional but recommended: click Dry Run (Validate Only).
    This verifies the exact supported EXE and patch bytes without writing files.
@@ -67,22 +68,29 @@ https://github.com/Lorsieab2/Fish-Tycoon-Fix-Patcher/releases
 The patcher accepts only this exact original executable:
 SHA-256: 9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD
 
-The fixed executable has this exact SHA-256:
-44CCC2EAA5633A88CDE03115C650F793E50391D48FFA707ADE44F284C808C49F
+The fixed executable with all three fixes has this exact SHA-256:
+C8B8C834CBDE2C362584B9F33381F8FA43DF7AF41A42FB73EDDD6C9F4B79FFB2
 
 The fix performs one random roll from 0 through 99 for every eligible diseased
 fish when a real body/fin (11,11) Crimson Comet is present. Results 0 through 19
 enter the game's original disease-clear and cure-counter instructions: exactly
 20 successful values out of 100.
 
-The Unknown Chemical fix initializes its verified use counter to 3 instead of
-1. The original after-use decrement and empty-at-zero behavior are unchanged.
-Its English store description now ends with: Contains 3 doses.
+The Unknown Chemical fix makes each purchase add 3 uses instead of 1, removes
+the game's runtime count reset, and keeps the normal after-use decrement and
+empty-at-zero behavior. Its English description ends with: Contains 3 doses.
+
+The universal-slot fix supports exactly: Ick Medicine, Fungus Medicine, Fish
+Vitamins, Growth Hormone, Unknown Chemical, Common Eggs, Unusual Eggs, and Rare
+Eggs. A purchase adds to a matching stack first. Otherwise it uses the first
+empty slot in order 2, 3, 4. If all three are occupied, it asks which slot to
+replace. Medicines, vitamins, and Growth Hormone add 3 uses; eggs add 1;
+Unknown Chemical adds 1 or 3 according to its separate checkbox.
 
 The release does not contain Fish Tycoon.exe or any original game assets.
 
 Trainer compatibility:
-Fish Tycoon 1 Crimson Comet Test Trainer v1.4.0 and later accepts the exact
+Fish Tycoon 1 Crimson Comet Test Trainer v1.5.0 and later accepts the exact
 fixed executable hash shown above.
 
 Have fun! -Lorsieab2 :)
@@ -99,6 +107,7 @@ def export_bundle(repo: Path, output: Path) -> list[Path]:
         repo / "work" / "offline_fish_tycoon_patcher.py": output / "offline_fish_tycoon_patcher.py",
         repo / "work" / "offline_fish_tycoon_patcher_gui.py": output / "offline_fish_tycoon_patcher_gui.py",
         repo / "work" / "verify_patched_exe.py": output / "verify_patched_exe.py",
+        repo / "work" / "build_universal_slots_patch.py": output / "build_universal_slots_patch.py",
         repo / "patches" / "fish-tycoon-fixes" / "manifest.json": output / "manifest.json",
         repo / "docs" / "Transparency Log.txt": output / "Transparency Log.txt",
         repo / "README.md": output / "README.txt",

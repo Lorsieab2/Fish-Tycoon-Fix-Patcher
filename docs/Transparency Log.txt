@@ -1,65 +1,28 @@
 Fish Tycoon Fix Patcher - Transparency Log
 ==========================================
 
-Release: v1.1.0
+Release: v1.2.0
 Date: 2026-07-21
 
-Purpose
--------
-Provide two independently selectable changes for the exact supported classic
-Windows Fish Tycoon executable:
+This release provides three independently selectable changes for one exact
+classic Windows Fish Tycoon executable.
 
-1. Repair the Crimson Comet curing branch with one 0..99 roll and success on
-   0..19, followed by the game's existing clear and counter instructions.
-2. Change the Unknown Chemical from one use to three uses and update its English
-   store description to say "Contains 3 doses."
+1. Crimson Comet curing uses one 0..99 roll and enters the game's original cure
+   block on 0..19. The exact body/fin (11,11) check is retained.
+2. Unknown Chemical purchases add three uses when enabled. The runtime count
+   reset is removed so the existing decrement can reach zero. The English store
+   description says "Contains 3 doses."
+3. Slots 2-4 accept and stack exactly Ick Medicine, Fungus Medicine, Fish
+   Vitamins, Growth Hormone, Unknown Chemical, Common Eggs, Unusual Eggs, and
+   Rare Eggs. Matching stacks take priority, then empty slots 2-4, then explicit
+   replacement prompts. Eggs consume one stacked use at a time.
 
-Crimson Comet evidence and implementation
-------------------------------------------
-The supported executable checks a nonzero disease/status field and calls
-selector 2, whose target is body 11 and fin 11. It then calls sub_403240 with
-zero. That helper can return only zero for this argument, so the following zero
-test skips the original clear block.
-
-The fix redirects that call to a 14-byte wrapper in verified alignment padding.
-It calls the original helper once with 100 and returns one for 0..19 or zero for
-20..99. The original identity check, test/jump, disease clear, and cure-counter
-increment remain unchanged.
-
-Unknown Chemical evidence and implementation
---------------------------------------------
-The purchase branch sets the Unknown Chemical counter at state+0x2F8 to one.
-The fix changes the immediate initializer in that full instruction from one to
-three. The existing after-use decrement, zero test, and empty behavior remain
-unchanged.
-
-The unique English store-description substring "Contains one dose." is replaced
-by the equal-size null-terminated string "Contains 3 doses." The separate German
-localization text is not changed.
-
-File identities
----------------
 Original SHA-256:
 9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD
 
-Crimson Comet only:
-33C8C9469E8E9F7DD460C4A9B9A3A897D2A9505C1E2627988046D8CED097AD9B
+Default all-fixes SHA-256:
+C8B8C834CBDE2C362584B9F33381F8FA43DF7AF41A42FB73EDDD6C9F4B79FFB2
 
-Unknown Chemical only:
-7A78B09F0509BDFFC191FFB9637FA41F8E8FEC73A10A524A6B017F3E42E88983
-
-Both fixes (default):
-44CCC2EAA5633A88CDE03115C650F793E50391D48FFA707ADE44F284C808C49F
-
-Distribution
-------------
-The repository and release contain source, a transparent manifest,
-documentation, and tests. They contain no Fish Tycoon.exe or original game
-assets. The patcher requires the exact supported executable and creates a
-separate output folder by default.
-
-Interpretation boundary
------------------------
-The byte-level behavior and observed runtime results are documented exactly.
-The classification of the original Crimson Comet behavior as a developer bug
-is the player's interpretation.
+The repository and release contain source, manifest, documentation, and tests.
+They contain no game executable or original assets. Static and stopped-loader
+validation do not replace the player's final in-game interpretation.

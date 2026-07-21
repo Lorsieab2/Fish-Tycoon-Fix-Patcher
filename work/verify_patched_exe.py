@@ -8,12 +8,13 @@ import json
 from pathlib import Path
 import struct
 
+import build_universal_slots_patch as slots
 import offline_fish_tycoon_patcher as patcher
 
 
-def rel32_target(instruction_va: int, instruction: bytes) -> int:
-    if len(instruction) != 5 or instruction[0] != 0xE8:
-        raise patcher.PatchError(f"Expected CALL rel32 at 0x{instruction_va:X}.")
+def rel32_target(instruction_va: int, instruction: bytes, opcode: int = 0xE8) -> int:
+    if len(instruction) != 5 or instruction[0] != opcode:
+        raise patcher.PatchError(f"Expected rel32 opcode 0x{opcode:02X} at 0x{instruction_va:X}.")
     displacement = struct.unpack_from("<i", instruction, 1)[0]
     return instruction_va + 5 + displacement
 
@@ -74,9 +75,7 @@ def verify(exe: Path, manifest_path: Path, enabled: set[str] | None = None) -> d
 
     if "unknown_chemical_three_uses" in selected:
         checks.update({
-            "unknown_chemical_counter_field": data[0x210B7:0x210C1] == bytes.fromhex(
-                "C7 80 F8 02 00 00 03 00 00 00"
-            ),
+            "unknown_chemical_runtime_reset_removed": data[0x210B7:0x210C1] == b"\x90" * 10,
             "unknown_chemical_description": data[0x45870:0x458DC].split(b"\0", 1)[0].endswith(
                 b"Contains 3 doses."
             ),
@@ -85,10 +84,34 @@ def verify(exe: Path, manifest_path: Path, enabled: set[str] | None = None) -> d
             ),
         })
         report.update({
-            "unknown_chemical_counter_va": "0x004210B7",
+            "unknown_chemical_reset_removed_va": "0x004210B7",
             "unknown_chemical_counter_field": "state+0x2F8",
-            "unknown_chemical_initial_uses": 3,
+            "unknown_chemical_uses_per_purchase": 3,
             "unknown_chemical_store_description": "Contains 3 doses.",
+        })
+
+    if "universal_supply_slots" in selected:
+        unknown_doses = 3 if "unknown_chemical_three_uses" in selected else 1
+        payload, labels = slots.build_payload(unknown_doses)
+        egg_target = slots.CAVE_VA + labels["egg_consume"]
+        checks.update({
+            "text_virtual_size_extended": data[0x1F8:0x1FC] == bytes.fromhex("00 F0 03 00"),
+            "universal_payload_exact": data[slots.CAVE_FILE_OFFSET:slots.CAVE_FILE_OFFSET + len(payload)] == payload,
+            "purchase_hook_target": rel32_target(0x00428133, data[0x28133:0x28138], 0xE9) == slots.CAVE_VA,
+            "use_hook_target": rel32_target(0x00420B70, data[0x20B70:0x20B75], 0xE9) == slots.CAVE_VA + labels["use"],
+            "common_egg_stack_hook": rel32_target(0x004213A7, data[0x213A7:0x213AC], 0xE9) == egg_target,
+            "unusual_egg_stack_hook": rel32_target(0x00421476, data[0x21476:0x2147B], 0xE9) == egg_target,
+            "rare_egg_stack_hook": rel32_target(0x00421549, data[0x21549:0x2154E], 0xE9) == egg_target,
+            "generic_slot2_prompt": b"Replace item in slot #2?\0" in data[0x43EF4:0x43F14],
+            "generic_slot3_prompt": b"Replace item in slot #3?\0" in data[0x43F34:0x43F54],
+            "generic_slot4_prompt": b"Replace item in slot #4?\0" in data[0x43F70:0x43F8C],
+            "unknown_chemical_runtime_reset_removed_for_stacking": data[0x210B7:0x210C1] == b"\x90" * 10,
+        })
+        report.update({
+            "supported_item_indices": list(range(8)),
+            "supported_items": ["Ick Medicine", "Fungus Medicine", "Fish Vitamins", "Growth Hormone", "Unknown Chemical", "Common Eggs", "Unusual Eggs", "Rare Eggs"],
+            "placement_order": "matching stack; first empty slot 2, 3, 4; replacement prompts 2, 3, 4",
+            "uses_added_per_purchase": {"Ick Medicine": 3, "Fungus Medicine": 3, "Fish Vitamins": 3, "Growth Hormone": 3, "Unknown Chemical": unknown_doses, "Common Eggs": 1, "Unusual Eggs": 1, "Rare Eggs": 1},
         })
 
     failed = [name for name, passed in checks.items() if not passed]
