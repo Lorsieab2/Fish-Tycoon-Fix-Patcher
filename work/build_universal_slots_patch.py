@@ -91,6 +91,7 @@ def build_payload(unknown_doses: int) -> tuple[bytes, dict[str, int]]:
     emit_prompt(code, 0xEC, "purchase_confirmed")
     code.rel32(b"\xE9", 0x00428225)              # player declined the purchase
     code.label("purchase_confirmed")
+    code.emit([0x8B, 0x4E, 0x10])                 # reload state; dialog calls clobber ecx
     code.emit([0x83,0xB9,0xE0,0x02,0,0,0])       # occupied slot 2?
     code.rel32(b"\x0F\x84", "match_3")
     code.emit([0x39,0xB9,0xD4,0x02,0,0])         # same item in slot 2?

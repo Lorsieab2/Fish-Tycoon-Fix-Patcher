@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.2 - 2026-07-21
+
+- Fixed a crash after accepting `Buy this Item?` when all supply slots were
+  occupied by reloading the game-state pointer after the dialog closes.
+
 ## v1.2.1 - 2026-07-21
 
 - Restored the original localized `Buy this ...?` confirmation before every

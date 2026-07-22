@@ -1,4 +1,4 @@
-# Fish Tycoon Fix Patcher v1.2.1: technical details
+# Fish Tycoon Fix Patcher v1.2.2: technical details
 
 ## Crimson Comet curing
 
@@ -21,7 +21,9 @@ three when it is on. The original decrement at `0x00421305` remains unchanged.
 
 The purchase hook at `0x00428133` accepts only store indices `0..7`. It first
 constructs the original localized store confirmation with string ID `0xEC` and
-cancels without changes unless the player selects Yes. It then searches
+cancels without changes unless the player selects Yes. After the dialog calls,
+it reloads the state pointer from `[esi+0x10]` before reading any slot record;
+this prevents the full-inventory path from dereferencing dialog-clobbered ECX. It then searches
 occupied slot records 2, 3, 4 for the same item index, then searches for an
 empty icon field in slot order, then presents generic replacement prompts.
 The purchase writer remains `0x00427540`; the wrapper replaces its default count

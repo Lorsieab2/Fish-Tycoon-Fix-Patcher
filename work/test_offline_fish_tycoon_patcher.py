@@ -26,7 +26,7 @@ class FishTycoonPatcherTests(unittest.TestCase):
         self.assertEqual(list(settings), [CURE, CHEMICAL, UNIVERSAL])
         self.assertTrue(all(settings[key]["default"] for key in settings))
         self.assertEqual(self.manifest["name"], "Fish Tycoon Fix Patcher")
-        self.assertEqual(self.manifest["version"], "v1.2.1")
+        self.assertEqual(self.manifest["version"], "v1.2.2")
 
     def test_all_seven_setting_combinations_have_one_checksum_and_hash(self) -> None:
         ids = [CURE, CHEMICAL, UNIVERSAL]
@@ -53,6 +53,7 @@ class FishTycoonPatcherTests(unittest.TestCase):
         self.assertEqual(len(differences), 1)
         self.assertEqual((payload1[differences[0]], payload3[differences[0]]), (1, 3))
         self.assertIn(bytes.fromhex("6A 01 68 EC 00 00 00"), payload1[:labels1["purchase_confirmed"]])
+        self.assertEqual(payload1[labels1["purchase_confirmed"]:labels1["purchase_confirmed"] + 3], bytes.fromhex("8B 4E 10"))
         self.assertIn(bytes.fromhex("89 5E 1C"), payload1)  # selected physical slot is restored
 
     def test_unknown_chemical_runtime_reset_is_removed(self) -> None:

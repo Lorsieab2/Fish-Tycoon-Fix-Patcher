@@ -69,7 +69,7 @@ The patcher accepts only this exact original executable:
 SHA-256: 9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD
 
 The fixed executable with all three fixes has this exact SHA-256:
-CC498FE29D84F6486AB69CE8C02ADE67096BDE60670AAF740B9CC580C4B68C58
+8F458EE27E0B4BF7DE8CF3D125F506F3D78993F77135DE23019E2B1F2EB6876B
 
 The fix performs one random roll from 0 through 99 for every eligible diseased
 fish when a real body/fin (11,11) Crimson Comet is present. Results 0 through 19
@@ -91,7 +91,7 @@ Unknown Chemical adds 1 or 3 according to its separate checkbox.
 The release does not contain Fish Tycoon.exe or any original game assets.
 
 Trainer compatibility:
-Fish Tycoon 1 Crimson Comet Test Trainer v1.5.1 and later accepts the exact
+Fish Tycoon 1 Crimson Comet Test Trainer v1.5.2 and later accepts the exact
 fixed executable hash shown above.
 
 Have fun! -Lorsieab2 :)
