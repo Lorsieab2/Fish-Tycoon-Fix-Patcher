@@ -41,7 +41,14 @@ asked about replacing slot 2, then 3, then 4; declining all three cancels the
 purchase. Medicines, vitamins, and Growth Hormone add 3 uses per purchase;
 eggs add 1; Unknown Chemical adds 1 or 3 according to its separate checkbox.
 Using a supported item from any of these physical slots routes it through the
-game's original item handler, and egg stacks clear only after their final use.
+game's original item handler. Common, Unusual, and Rare Egg hooks call one
+shared decrement routine and then jump to their exact original hatch
+continuations; egg stacks clear only after their final use.
+
+The GUI remembers the Vanilla Game Folder and Modded EXE Folder beside the
+patcher, auto-populates them the next time it opens, and shows clickable folder
+paths after a successful patch. `Fish Tycoon - Copy.exe` is deliberately not
+copied into the modded output folder.
 
 ## Safety and use
 
@@ -68,12 +75,12 @@ PE:       x86 / PE32, timestamp 0x536BDE35, image base 0x00400000
 The default all-fixes output is:
 
 ```text
-SHA-256: C0D664D79748F72B9D8183F87BAB1B2CA969C7647E1EBA427256D4EF4C6D2366
+SHA-256: E0EE1A85668D39A4A2D9A2E20A702E6A65465B34EE1AAE960EDF1D33CF32E75A
 ```
 
 All seven nonempty setting-combination hashes are recorded in
 `patches/fish-tycoon-fixes/manifest.json`. Fish Tycoon 1 Crimson Comet Test
-Trainer v1.5.3 and later recognizes the v1.2.3 outputs.
+Trainer v1.5.4 and later recognizes the v1.2.4 outputs.
 
 ## Development
 

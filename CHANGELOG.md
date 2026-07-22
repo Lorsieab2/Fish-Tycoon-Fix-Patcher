@@ -1,11 +1,21 @@
 # Changelog
 
+## v1.2.4 - 2026-07-21
+
+- Fixed the confirmed Common, Unusual, and Rare Egg use crash. Each egg hook
+  now calls the shared decrement routine and then jumps to its exact original
+  hatch continuation; no `ret` executes without a matching `call`.
+- Restored the original item handler's verified `ret 8` convention and retains
+  its completed-action selected-slot value instead of reselecting the slot.
+- The GUI now mirrors the VF2 patcher by remembering and auto-populating the
+  vanilla and modded paths and showing clickable completion-path links.
+- Excludes `Fish Tycoon - Copy.exe` from the generated modded game folder.
+
 ## v1.2.3 - 2026-07-21
 
-- Fixed crashes when using a supported item from a non-original slot, including
-  Rare Eggs from slot 2.
-- Correctly reclaims the two internal call arguments and preserves the original
-  item-use function's plain-return calling convention.
+- Attempted to address supported-item crashes from non-original slots. Live
+  reproduction later proved the egg path still crashed and dump analysis showed
+  that the original item-use function actually uses `ret 8`.
 
 ## v1.2.2 - 2026-07-21
 

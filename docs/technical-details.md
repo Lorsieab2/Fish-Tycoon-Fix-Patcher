@@ -1,4 +1,4 @@
-# Fish Tycoon Fix Patcher v1.2.3: technical details
+# Fish Tycoon Fix Patcher v1.2.4: technical details
 
 ## Crimson Comet curing
 
@@ -34,11 +34,20 @@ into the original category slot, calls the unmodified original handler through
 a trampoline, swaps the records back, and restores the physical selected slot.
 This retains the original item effects without duplicating them.
 
-The original handler ends with plain `ret`; its caller owns the two coordinate
-arguments. The wrapper therefore adds 8 to ESP after its internal call and also
-returns with plain `ret`. Earlier universal-slot builds used `ret 8` on this
-swapped path, corrupting the saved-register frame when an item such as Rare Eggs
-was used outside its original category slot.
+The original handler ends with `ret 8`, including the Common, Unusual, and Rare
+Egg paths. Its internal invocation therefore removes the wrapper's duplicated
+coordinate arguments. After swapping the modified record back, the wrapper
+restores its saved registers and uses the same `ret 8` convention for the outer
+caller. It leaves the original handler's completed-action selected-slot value
+of `99` intact.
+
+Each 42-byte egg-clear replacement starts with `call egg_consume` followed by a
+direct jump to that egg type's original hatch continuation: `0x004213D1`,
+`0x004214A0`, or `0x00421573`. The shared routine's `ret` therefore always has
+the return address pushed by its matching `call`. The v1.2.0-v1.2.3 hooks used
+`jmp egg_consume`; the routine's unmatched `ret` consumed a local value as an
+address. A captured v1.2.3 crash proved that value was `3`, matching EIP
+`0x00000003`.
 
 Common, Unusual, and Rare Egg clear blocks at `0x004213A7`, `0x00421476`, and
 `0x00421549` call a shared routine that decrements slot 4's count and clears the

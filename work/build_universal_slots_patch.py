@@ -224,12 +224,10 @@ def build_payload(unknown_doses: int) -> tuple[bytes, dict[str, int]]:
     code.emit([0x50, 0x52, 0x8B, 0xCE])
     code.rel32(b"\xE8", "use_trampoline")
     code.label("use_after_original")
-    code.emit([0x83, 0xC4, 0x08])                 # original handler uses plain ret
     code.rel32(b"\xE8", "swap_records")
-    code.emit([0x89, 0x5E, 0x1C])                 # restore the physical selected slot
     code.label("use_swapped_epilogue")
     code.emit([0x5D, 0x5F, 0x5E, 0x5B])
-    code.emit([0xC3])                             # caller owns the two arguments
+    code.emit([0xC2, 0x08, 0x00])                 # mirror original handler's ret 8
 
     code.label("use_original")
     code.emit([0x5D, 0x5F, 0x5E, 0x5B])
@@ -273,6 +271,16 @@ def rel32_patch(source_va: int, target_va: int, total_length: int) -> bytes:
     return result + b"\x90" * (total_length - len(result))
 
 
+def call_then_jump_patch(source_va: int, call_target: int, continuation_va: int,
+                         total_length: int) -> bytes:
+    if total_length < 10:
+        raise ValueError("call-then-jump patch needs at least 10 bytes")
+    call = b"\xE8" + struct.pack("<i", call_target - (source_va + 5))
+    jump_va = source_va + len(call)
+    jump = b"\xE9" + struct.pack("<i", continuation_va - (jump_va + 5))
+    return call + jump + b"\x90" * (total_length - len(call) - len(jump))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--json", action="store_true")
@@ -286,9 +294,9 @@ def main() -> int:
         "purchase_hook": rel32_patch(PURCHASE_HOOK_VA, CAVE_VA, 9).hex(" ").upper(),
         "unknown_doses_per_purchase": args.unknown_doses,
         "use_hook": rel32_patch(USE_HOOK_VA, CAVE_VA + labels["use"], 8).hex(" ").upper(),
-        "egg_common_hook": rel32_patch(0x004213A7, CAVE_VA + labels["egg_consume"], 42).hex(" ").upper(),
-        "egg_unusual_hook": rel32_patch(0x00421476, CAVE_VA + labels["egg_consume"], 42).hex(" ").upper(),
-        "egg_rare_hook": rel32_patch(0x00421549, CAVE_VA + labels["egg_consume"], 42).hex(" ").upper(),
+        "egg_common_hook": call_then_jump_patch(0x004213A7, CAVE_VA + labels["egg_consume"], 0x004213D1, 42).hex(" ").upper(),
+        "egg_unusual_hook": call_then_jump_patch(0x00421476, CAVE_VA + labels["egg_consume"], 0x004214A0, 42).hex(" ").upper(),
+        "egg_rare_hook": call_then_jump_patch(0x00421549, CAVE_VA + labels["egg_consume"], 0x00421573, 42).hex(" ").upper(),
         "payload": payload.hex(" ").upper(),
     }
     use_offset = labels["use"]

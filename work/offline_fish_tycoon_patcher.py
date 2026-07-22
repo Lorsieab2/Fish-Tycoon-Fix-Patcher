@@ -20,6 +20,13 @@ class PatchError(RuntimeError):
     pass
 
 
+EXCLUDED_OUTPUT_NAMES = {"fish tycoon - copy.exe"}
+
+
+def excluded_output_files(_directory: str, names: list[str]) -> set[str]:
+    return {name for name in names if name.casefold() in EXCLUDED_OUTPUT_NAMES}
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -308,6 +315,7 @@ def apply_manifest(args: argparse.Namespace) -> int:
         "output_exe_sha256": patched_hash,
     }
     if args.dry_run:
+        args.last_apply_summary = report
         print(json.dumps(report, indent=2))
         print("DRY RUN PASS: exact executable identity and all patch bytes validated; no files written.")
         return 0
@@ -338,7 +346,7 @@ def apply_manifest(args: argparse.Namespace) -> int:
     staging = Path(tempfile.mkdtemp(prefix=f".{output_dir.name}.staging-", dir=output_parent))
     try:
         shutil.rmtree(staging)
-        shutil.copytree(game_dir, staging)
+        shutil.copytree(game_dir, staging, ignore=excluded_output_files)
         staged_exe = staging / vanilla_exe.name
         staged_exe.write_bytes(patched)
         if sha256_file(staged_exe) != patched_hash:
@@ -374,6 +382,7 @@ def apply_manifest(args: argparse.Namespace) -> int:
 
     print(json.dumps(report, indent=2))
     print(f"PATCH PASS: created separate fixed game folder: {output_dir}")
+    args.last_apply_summary = report
     return 0
 
 

@@ -26,7 +26,7 @@ class FishTycoonPatcherTests(unittest.TestCase):
         self.assertEqual(list(settings), [CURE, CHEMICAL, UNIVERSAL])
         self.assertTrue(all(settings[key]["default"] for key in settings))
         self.assertEqual(self.manifest["name"], "Fish Tycoon Fix Patcher")
-        self.assertEqual(self.manifest["version"], "v1.2.3")
+        self.assertEqual(self.manifest["version"], "v1.2.4")
 
     def test_all_seven_setting_combinations_have_one_checksum_and_hash(self) -> None:
         ids = [CURE, CHEMICAL, UNIVERSAL]
@@ -54,9 +54,9 @@ class FishTycoonPatcherTests(unittest.TestCase):
         self.assertEqual((payload1[differences[0]], payload3[differences[0]]), (1, 3))
         self.assertIn(bytes.fromhex("6A 01 68 EC 00 00 00"), payload1[:labels1["purchase_confirmed"]])
         self.assertEqual(payload1[labels1["purchase_confirmed"]:labels1["purchase_confirmed"] + 3], bytes.fromhex("8B 4E 10"))
-        self.assertEqual(payload1[labels1["use_after_original"]:labels1["use_after_original"] + 3], bytes.fromhex("83 C4 08"))
-        self.assertEqual(payload1[labels1["use_swapped_epilogue"]:labels1["use_swapped_epilogue"] + 5], bytes.fromhex("5D 5F 5E 5B C3"))
-        self.assertIn(bytes.fromhex("89 5E 1C"), payload1)  # selected physical slot is restored
+        self.assertEqual(payload1[labels1["use_after_original"]], 0xE8)  # original ret 8 already reclaimed its args
+        self.assertEqual(payload1[labels1["use_swapped_epilogue"]:labels1["use_swapped_epilogue"] + 7], bytes.fromhex("5D 5F 5E 5B C2 08 00"))
+        self.assertNotIn(bytes.fromhex("89 5E 1C"), payload1[labels1["use_after_original"]:labels1["use_swapped_epilogue"]])
 
     def test_every_supported_item_uses_safely_from_every_supply_slot(self) -> None:
         # Mirrors the payload's exact item-index category comparisons. Every
@@ -94,6 +94,15 @@ class FishTycoonPatcherTests(unittest.TestCase):
                 exercised.append((name, physical_slot))
 
         self.assertEqual(len(exercised), 24)
+
+    def test_all_egg_hooks_call_shared_consumer_then_jump_to_original_continuation(self) -> None:
+        records = {
+            patcher.parse_int(row["offset"], "offset"): patcher.parse_hex(row["replacement"], "replacement")
+            for row in patcher.active_patch_records(self.manifest, {UNIVERSAL})
+        }
+        for offset in (0x213A7, 0x21476, 0x21549):
+            self.assertEqual(records[offset][0], 0xE8)  # call pushes the return address consumed by egg_consume ret
+            self.assertEqual(records[offset][5], 0xE9)  # explicit original hatch continuation
 
     def test_unknown_chemical_runtime_reset_is_removed(self) -> None:
         for enabled in ({CHEMICAL}, {UNIVERSAL}, {CHEMICAL, UNIVERSAL}):
@@ -136,6 +145,10 @@ class FishTycoonPatcherTests(unittest.TestCase):
     def test_wrong_original_byte_is_rejected(self) -> None:
         with self.assertRaises(patcher.PatchError):
             patcher.apply_patch_bytes(bytes(385024), patcher.active_patch_records(self.manifest, {UNIVERSAL}))
+
+    def test_extra_fish_tycoon_copy_exe_is_excluded_from_modded_folder(self) -> None:
+        names = ["Fish Tycoon.exe", "Fish Tycoon - Copy.exe", "SDL.dll"]
+        self.assertEqual(patcher.excluded_output_files("ignored", names), {"Fish Tycoon - Copy.exe"})
 
     def test_probability_domain_is_exactly_twenty_percent(self) -> None:
         self.assertEqual([roll for roll in range(100) if roll < 20], list(range(20)))

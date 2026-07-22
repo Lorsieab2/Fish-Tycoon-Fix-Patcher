@@ -109,8 +109,14 @@ def main() -> int:
         record("redirect_store_purchase_for_universal_slots", 0x28133, bytes.fromhex("83 FF 19 0F 87 9A 00 00 00"), slots.rel32_patch(0x00428133, slots.CAVE_VA, 9), [UNIVERSAL], "Preserves the original Buy confirmation, then routes the exact eight supported items through matching-stack, empty-slot, and replacement logic."),
         record("redirect_item_use_for_universal_slots", 0x20B70, bytes.fromhex("83 EC 20 53 8B 5C 24 2C"), slots.rel32_patch(0x00420B70, slots.CAVE_VA + labels1["use"], 8), [UNIVERSAL], "Routes supported items through their original handler regardless of physical slot."),
     ]
-    for name, offset, va in (("common", 0x213A7, 0x004213A7), ("unusual", 0x21476, 0x00421476), ("rare", 0x21549, 0x00421549)):
-        records.append(record(f"stack_{name}_egg_uses", offset, old_egg[offset], slots.rel32_patch(va, egg_va, 42), [UNIVERSAL], f"Consumes one {name} egg use and clears the slot only when the stack reaches zero."))
+    egg_hooks = (
+        ("common", 0x213A7, 0x004213A7, 0x004213D1),
+        ("unusual", 0x21476, 0x00421476, 0x004214A0),
+        ("rare", 0x21549, 0x00421549, 0x00421573),
+    )
+    for name, offset, va, continuation in egg_hooks:
+        replacement = slots.call_then_jump_patch(va, egg_va, continuation, 42)
+        records.append(record(f"stack_{name}_egg_uses", offset, old_egg[offset], replacement, [UNIVERSAL], f"Calls the shared one-use {name} egg decrement and then jumps to the original hatch continuation."))
 
     prompt_specs = (
         ("slot2_de", 0x43ED4, 32, "Artikel in Slot 2 ersetzen?"),
@@ -130,9 +136,9 @@ def main() -> int:
     ]
     manifest: dict[str, object] = {
         "manifest_version": 3,
-        "id": "fish-tycoon-pc-fixes-v6",
+        "id": "fish-tycoon-pc-fixes-v7",
         "name": "Fish Tycoon Fix Patcher",
-        "version": "v1.2.3",
+        "version": "v1.2.4",
         "description": "Repairs Crimson Comet curing, fixes Unknown Chemical uses, and lets the exact supported supplies stack in slots 2-4.",
         "patched_sha256": "",
         "patched_sha256_by_settings": {},
