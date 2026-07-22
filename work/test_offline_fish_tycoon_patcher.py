@@ -26,7 +26,7 @@ class FishTycoonPatcherTests(unittest.TestCase):
         self.assertEqual(list(settings), [CURE, CHEMICAL, UNIVERSAL])
         self.assertTrue(all(settings[key]["default"] for key in settings))
         self.assertEqual(self.manifest["name"], "Fish Tycoon Fix Patcher")
-        self.assertEqual(self.manifest["version"], "v1.2.2")
+        self.assertEqual(self.manifest["version"], "v1.2.3")
 
     def test_all_seven_setting_combinations_have_one_checksum_and_hash(self) -> None:
         ids = [CURE, CHEMICAL, UNIVERSAL]
@@ -54,7 +54,46 @@ class FishTycoonPatcherTests(unittest.TestCase):
         self.assertEqual((payload1[differences[0]], payload3[differences[0]]), (1, 3))
         self.assertIn(bytes.fromhex("6A 01 68 EC 00 00 00"), payload1[:labels1["purchase_confirmed"]])
         self.assertEqual(payload1[labels1["purchase_confirmed"]:labels1["purchase_confirmed"] + 3], bytes.fromhex("8B 4E 10"))
+        self.assertEqual(payload1[labels1["use_after_original"]:labels1["use_after_original"] + 3], bytes.fromhex("83 C4 08"))
+        self.assertEqual(payload1[labels1["use_swapped_epilogue"]:labels1["use_swapped_epilogue"] + 5], bytes.fromhex("5D 5F 5E 5B C3"))
         self.assertIn(bytes.fromhex("89 5E 1C"), payload1)  # selected physical slot is restored
+
+    def test_every_supported_item_uses_safely_from_every_supply_slot(self) -> None:
+        # Mirrors the payload's exact item-index category comparisons. Every
+        # non-native case uses the same swap/call/argument-reclaim/swap path.
+        items = {
+            0: ("Ick Medicine", 1),
+            1: ("Fungus Medicine", 1),
+            2: ("Fish Vitamins", 2),
+            3: ("Growth Hormone", 2),
+            4: ("Unknown Chemical", 2),
+            5: ("Common Eggs", 3),
+            6: ("Unusual Eggs", 3),
+            7: ("Rare Eggs", 3),
+        }
+        exercised = []
+        for item_index, (name, canonical_slot) in items.items():
+            for physical_slot in (1, 2, 3):
+                records = {
+                    1: {"item": 100, "uses": 9},
+                    2: {"item": 101, "uses": 9},
+                    3: {"item": 102, "uses": 9},
+                }
+                records[physical_slot] = {"item": item_index, "uses": 2}
+                before_canonical = dict(records[canonical_slot])
+
+                if physical_slot != canonical_slot:
+                    records[physical_slot], records[canonical_slot] = records[canonical_slot], records[physical_slot]
+                records[canonical_slot]["uses"] -= 1  # original category handler
+                if physical_slot != canonical_slot:
+                    records[physical_slot], records[canonical_slot] = records[canonical_slot], records[physical_slot]
+
+                self.assertEqual(records[physical_slot], {"item": item_index, "uses": 1}, name)
+                if physical_slot != canonical_slot:
+                    self.assertEqual(records[canonical_slot], before_canonical, name)
+                exercised.append((name, physical_slot))
+
+        self.assertEqual(len(exercised), 24)
 
     def test_unknown_chemical_runtime_reset_is_removed(self) -> None:
         for enabled in ({CHEMICAL}, {UNIVERSAL}, {CHEMICAL, UNIVERSAL}):

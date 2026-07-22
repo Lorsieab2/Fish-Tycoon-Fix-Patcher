@@ -112,6 +112,8 @@ def verify(exe: Path, manifest_path: Path, enabled: set[str] | None = None) -> d
             "universal_payload_exact": data[slots.CAVE_FILE_OFFSET:slots.CAVE_FILE_OFFSET + len(payload)] == payload,
             "normal_purchase_confirmation_present": bytes.fromhex("6A 01 68 EC 00 00 00") in payload[:labels["purchase_confirmed"]],
             "state_reloaded_after_purchase_confirmation": payload[labels["purchase_confirmed"]:labels["purchase_confirmed"] + 3] == bytes.fromhex("8B 4E 10"),
+            "alternate_slot_call_arguments_reclaimed": payload[labels["use_after_original"]:labels["use_after_original"] + 3] == bytes.fromhex("83 C4 08"),
+            "alternate_slot_plain_return_preserved": payload[labels["use_swapped_epilogue"]:labels["use_swapped_epilogue"] + 5] == bytes.fromhex("5D 5F 5E 5B C3"),
             "purchase_hook_target": rel32_target(0x00428133, data[0x28133:0x28138], 0xE9) == slots.CAVE_VA,
             "use_hook_target": rel32_target(0x00420B70, data[0x20B70:0x20B75], 0xE9) == slots.CAVE_VA + labels["use"],
             "common_egg_stack_hook": rel32_target(0x004213A7, data[0x213A7:0x213AC], 0xE9) == egg_target,

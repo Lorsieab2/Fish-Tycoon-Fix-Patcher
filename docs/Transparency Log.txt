@@ -1,7 +1,7 @@
 Fish Tycoon Fix Patcher - Transparency Log
 ==========================================
 
-Release: v1.2.2
+Release: v1.2.3
 Date: 2026-07-21
 
 This release provides three independently selectable changes for one exact
@@ -22,7 +22,7 @@ Original SHA-256:
 9F15F13537AD0978D1E3AA2F94A64992FB7D968648BF265810087BDC88EDBDCD
 
 Default all-fixes SHA-256:
-8F458EE27E0B4BF7DE8CF3D125F506F3D78993F77135DE23019E2B1F2EB6876B
+C0D664D79748F72B9D8183F87BAB1B2CA969C7647E1EBA427256D4EF4C6D2366
 
 The repository and release contain source, manifest, documentation, and tests.
 They contain no game executable or original assets. Static and stopped-loader

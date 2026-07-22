@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.3 - 2026-07-21
+
+- Fixed crashes when using a supported item from a non-original slot, including
+  Rare Eggs from slot 2.
+- Correctly reclaims the two internal call arguments and preserves the original
+  item-use function's plain-return calling convention.
+
 ## v1.2.2 - 2026-07-21
 
 - Fixed a crash after accepting `Buy this Item?` when all supply slots were

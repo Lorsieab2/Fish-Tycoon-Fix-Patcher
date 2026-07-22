@@ -130,9 +130,9 @@ def main() -> int:
     ]
     manifest: dict[str, object] = {
         "manifest_version": 3,
-        "id": "fish-tycoon-pc-fixes-v5",
+        "id": "fish-tycoon-pc-fixes-v6",
         "name": "Fish Tycoon Fix Patcher",
-        "version": "v1.2.2",
+        "version": "v1.2.3",
         "description": "Repairs Crimson Comet curing, fixes Unknown Chemical uses, and lets the exact supported supplies stack in slots 2-4.",
         "patched_sha256": "",
         "patched_sha256_by_settings": {},

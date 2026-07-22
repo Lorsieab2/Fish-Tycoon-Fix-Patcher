@@ -1,4 +1,4 @@
-# Fish Tycoon Fix Patcher v1.2.2: technical details
+# Fish Tycoon Fix Patcher v1.2.3: technical details
 
 ## Crimson Comet curing
 
@@ -33,6 +33,12 @@ The use hook at `0x00420B70` temporarily swaps a complete 28-byte slot record
 into the original category slot, calls the unmodified original handler through
 a trampoline, swaps the records back, and restores the physical selected slot.
 This retains the original item effects without duplicating them.
+
+The original handler ends with plain `ret`; its caller owns the two coordinate
+arguments. The wrapper therefore adds 8 to ESP after its internal call and also
+returns with plain `ret`. Earlier universal-slot builds used `ret 8` on this
+swapped path, corrupting the saved-register frame when an item such as Rare Eggs
+was used outside its original category slot.
 
 Common, Unusual, and Rare Egg clear blocks at `0x004213A7`, `0x00421476`, and
 `0x00421549` call a shared routine that decrements slot 4's count and clears the

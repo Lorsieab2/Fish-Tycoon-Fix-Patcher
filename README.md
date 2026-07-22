@@ -68,12 +68,12 @@ PE:       x86 / PE32, timestamp 0x536BDE35, image base 0x00400000
 The default all-fixes output is:
 
 ```text
-SHA-256: 8F458EE27E0B4BF7DE8CF3D125F506F3D78993F77135DE23019E2B1F2EB6876B
+SHA-256: C0D664D79748F72B9D8183F87BAB1B2CA969C7647E1EBA427256D4EF4C6D2366
 ```
 
 All seven nonempty setting-combination hashes are recorded in
 `patches/fish-tycoon-fixes/manifest.json`. Fish Tycoon 1 Crimson Comet Test
-Trainer v1.5.2 and later recognizes the v1.2.2 outputs.
+Trainer v1.5.3 and later recognizes the v1.2.3 outputs.
 
 ## Development
 

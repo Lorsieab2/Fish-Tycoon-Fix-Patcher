@@ -223,10 +223,13 @@ def build_payload(unknown_doses: int) -> tuple[bytes, dict[str, int]]:
     code.emit([0x8B, 0x54, 0x24, 0x14])           # original arg3
     code.emit([0x50, 0x52, 0x8B, 0xCE])
     code.rel32(b"\xE8", "use_trampoline")
+    code.label("use_after_original")
+    code.emit([0x83, 0xC4, 0x08])                 # original handler uses plain ret
     code.rel32(b"\xE8", "swap_records")
     code.emit([0x89, 0x5E, 0x1C])                 # restore the physical selected slot
+    code.label("use_swapped_epilogue")
     code.emit([0x5D, 0x5F, 0x5E, 0x5B])
-    code.emit([0xC2, 0x08, 0x00])
+    code.emit([0xC3])                             # caller owns the two arguments
 
     code.label("use_original")
     code.emit([0x5D, 0x5F, 0x5E, 0x5B])
